@@ -37,7 +37,9 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 .wx .now{display:flex;gap:.4rem;align-items:center;font-size:1.1rem}
 .wx .d{display:flex;gap:.5rem;justify-content:center;align-items:center}
 .wx .d i{font-style:normal;color:var(--dim)}
-.off{opacity:.55}
+.i{width:1.7rem;height:1.7rem;flex:none;vertical-align:middle}
+.ic .i{width:1.4rem;height:1.4rem;margin-inline-end:.35rem}
+.next .h .i{width:1.1rem;height:1.1rem}
 </style>
 </head>
 <body>
@@ -47,13 +49,13 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
     <div class="clock">
       <div class="time"><span id="t">--:--</span><small id="ap"></small></div>
       <div class="meta">
-        <div><span>📅 <span id="gd"></span> · <span id="hd"></span></span></div>
-        <div><span>🌙 <span id="rm"></span></span></div>
+        <div><span><span class="ic" id="ic-cal"></span> <span id="gd"></span> · <span id="hd"></span></span></div>
+        <div><span><span class="ic" id="ic-moon"></span> <span id="rm"></span></span></div>
         <div class="dhikr" id="dk"></div>
       </div>
     </div>
     <div class="card next">
-      <div class="h">🕌 الصلاة القادمة</div>
+      <div class="h"><span class="ic" id="ic-m"></span>الصلاة القادمة</div>
       <div class="n"><span id="nn">--</span><span id="nt"></span></div>
       <div class="r" id="nr"></div>
       <div class="p" id="np"></div>
@@ -156,7 +158,22 @@ function renderDates() {
   $('rm').textContent = r === 0 ? 'اليوم أول رمضان' : r ? 'باقي على رمضان ' + ar(r) + ' يومًا' : '';
 }
 // ----- الطقس -----
-const ico = c => c === 0 ? '☀️' : c <= 2 ? '⛅' : c === 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 67 ? '🌧️' : c <= 77 ? '❄️' : c <= 82 ? '🌦️' : '⛈️';
+const SV = x => '<svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + x + '</svg>';
+const G = (c, x) => '<g stroke="' + c + '">' + x + '</g>';
+const IC = {
+  sun: SV(G('#ffd166', '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>')),
+  part: SV(G('#ffd166', '<circle cx="8" cy="8" r="2.8"/><path d="M8 2v1.4M2 8h1.4M3.8 3.8l1 1M12.2 3.8l-1 1"/>') + G('#cfe0ff', '<path d="M8 21a3.5 3.5 0 0 1-.4-6.98 4.8 4.8 0 0 1 9.2-.8A4 4 0 0 1 17 21H8z"/>')),
+  cloud: SV(G('#cfe0ff', '<path d="M6.5 18.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 18.5H6.5z"/>')),
+  fog: SV(G('#9db4e6', '<path d="M4 7h16M6 11h14M4 15h16M7 19h11"/>')),
+  rain: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#6cb8ff', '<path d="M8 17.5l-1 3M12 17.5l-1 3M16 17.5l-1 3"/>')),
+  snow: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#e6f1ff', '<path d="M8 18.5v.5M12 20.5v.5M16 18.5v.5M10 22v.5M14 22v.5"/>')),
+  bolt: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#ffd166', '<path d="M12.5 14.5l-2.5 4h3.5l-2 4"/>')),
+  cal: SV(G('#9db4e6', '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>')),
+  moon: SV(G('#ffd166', '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')),
+  mosque: SV(G('#7fd3ff', '<path d="M4 21V13h16v8M7 13a5 5 0 0 1 10 0M12 4v3.5M3 21h18M10 21v-3.5a2 2 0 0 1 4 0V21"/>'))
+};
+$('ic-cal').innerHTML = IC.cal; $('ic-moon').innerHTML = IC.moon; $('ic-m').innerHTML = IC.mosque;
+const ico = c => c === 0 ? IC.sun : c <= 2 ? IC.part : c === 3 ? IC.cloud : c <= 48 ? IC.fog : c <= 67 ? IC.rain : c <= 77 ? IC.snow : c <= 82 ? IC.rain : IC.bolt;
 async function loadWeather() {
   const rows = [];
   for (const c of CFG.cities) {
