@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شاشة التوقف</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
+<style>
+:root{--bg1:#050b22;--bg2:#0a1640;--card:rgba(24,48,112,.38);--line:rgba(120,165,255,.38);--ink:#e8efff;--dim:#9db4e6;--accent:#7fd3ff;--hi:rgba(150,190,255,.2);--up:#4ade80;--down:#f472b6}
+*{box-sizing:border-box;margin:0}
+html{font-size:1.04vw;background:#050b22}
+body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-serif;background:radial-gradient(120% 90% at 80% 0%,var(--bg2),var(--bg1) 70%);overflow:hidden}
+#app{padding:4rem 4.5rem;display:flex;flex-direction:column;gap:2rem;min-height:100vh;justify-content:center;transition:transform 2s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:1.1rem}
+.top{display:grid;grid-template-columns:1fr 30rem;gap:2rem;align-items:center}
+.next{padding:1.4rem 1.6rem;display:flex;flex-direction:column;gap:.6rem}
+.next .h{font-size:.9rem;color:var(--dim)}
+.next .n{display:flex;justify-content:space-between;align-items:baseline;font-size:2rem;font-weight:700}
+.next .n span:last-child{font-size:1.4rem;font-weight:500}
+.next .r{font-size:1.15rem;font-weight:700;color:var(--accent)}
+.next .p{font-size:.8rem;color:var(--dim)}
+.clock{display:flex;flex-direction:column;align-items:flex-start;gap:1rem}
+.time{direction:ltr;font-size:7.5rem;line-height:1;font-weight:500;color:var(--accent);letter-spacing:.02em;text-shadow:0 0 2rem rgba(127,211,255,.25)}
+.time small{font-size:2rem;margin-inline-start:.6rem;color:var(--dim)}
+.meta{display:flex;flex-direction:column;gap:.7rem;font-size:1.25rem;color:var(--dim)}
+.meta div{display:flex;gap:1.5rem;align-items:center}
+#btc.up{color:var(--up)}#btc.down{color:var(--down)}
+.prayers{display:grid;grid-template-columns:repeat(5,1fr);padding:.8rem;gap:.6rem}
+.pr{text-align:center;padding:1rem .5rem;border-radius:.8rem;border:1px solid transparent}
+.pr.on{background:var(--hi);border-color:rgba(200,220,255,.7)}
+.pr b{display:block;font-size:1rem;color:var(--dim);font-weight:500;margin-bottom:.5rem}
+.pr span{font-size:1.7rem;font-weight:700}
+.wx{padding:1rem 1.4rem;display:grid;grid-template-columns:7rem 5.5rem repeat(7,1fr);align-items:center;row-gap:.9rem;font-size:1.1rem}
+.wx .hd{color:var(--dim);font-size:.9rem;text-align:center}
+.wx .city{font-size:1.25rem;font-weight:500}
+.wx .now{display:flex;gap:.4rem;align-items:center;font-size:1.1rem}
+.wx .d{display:flex;gap:.5rem;justify-content:center;align-items:center}
+.wx .d i{font-style:normal;color:var(--dim)}
+.off{opacity:.55}
+</style>
+</head>
+<body>
+<main id="app">
+  <section class="top">
+    <div class="clock">
+      <div class="time"><span id="t">--:--</span><small id="ap"></small></div>
+      <div class="meta">
+        <div><span>📅 <span id="gd"></span> · <span id="hd"></span></span></div>
+        <div><span>🌙 <span id="rm"></span></span><span id="btc">₿ …</span></div>
+      </div>
+    </div>
+    <div class="card next">
+      <div class="h">🕌 الصلاة القادمة</div>
+      <div class="n"><span id="nn">--</span><span id="nt"></span></div>
+      <div class="r" id="nr"></div>
+      <div class="p" id="np"></div>
+    </div>
+  </section>
+  <section class="card prayers" id="prayers"></section>
+  <section class="card wx" id="wx"></section>
+</main>
+<script>
+// ===== الإعدادات: عدّل هنا =====
+const CFG = {
+  prayer: { city: 'Riyadh', country: 'SA', method: 4 }, // 4 = أم القرى
+  cities: [
+    { n: 'الرياض', lat: 24.7136, lon: 46.6753 },
+    { n: 'القصيم', lat: 26.326, lon: 43.975 }
+  ]
+};
+// ================================
+const AR = '٠١٢٣٤٥٦٧٨٩', ar = s => String(s).replace(/\d/g, d => AR[d]);
+const $ = id => document.getElementById(id);
+const NAMES = { Fajr: 'الفجر', Dhuhr: 'الظهر', Asr: 'العصر', Maghrib: 'المغرب', Isha: 'العشاء' };
+const KEYS = Object.keys(NAMES);
+const pad = n => String(n).padStart(2, '0');
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+async function getJSON(url, key) {
+  try {
+    const r = await fetch(url); if (!r.ok) throw 0;
+    const j = await r.json(); store.set(key, j); return j;
+  } catch (e) { return store.get(key); }
+}
+const f12 = d => ar(((d.getHours() % 12) || 12) + ':' + pad(d.getMinutes())) + ' ' + (d.getHours() < 12 ? 'ص' : 'م');
+function dur(ms) {
+  const m = Math.max(0, Math.floor(ms / 60000)), h = Math.floor(m / 60), mm = m % 60;
+  const hw = h === 1 ? 'ساعة' : h === 2 ? 'ساعتان' : h <= 10 ? ar(h) + ' ساعات' : ar(h) + ' ساعة';
+  const mw = mm === 1 ? 'دقيقة' : mm === 2 ? 'دقيقتان' : mm <= 10 ? ar(mm) + ' دقائق' : ar(mm) + ' دقيقة';
+  return h ? (mm ? hw + ' و' + mw : hw) : mw;
+}
+// ----- الصلوات -----
+let P = {}; // key dd-mm-yyyy -> {Fajr:Date,...}
+const dk = d => pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear();
+async function loadPrayers() {
+  const base = new Date();
+  for (const off of [-1, 0, 1]) {
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + off);
+    const k = dk(d), c = CFG.prayer;
+    const j = await getJSON(`https://api.aladhan.com/v1/timingsByCity/${k}?city=${c.city}&country=${c.country}&method=${c.method}`, 'pt' + k);
+    if (!j || !j.data) continue;
+    const o = {};
+    KEYS.forEach(n => {
+      const [h, m] = j.data.timings[n].slice(0, 5).split(':').map(Number);
+      o[n] = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m);
+    });
+    P[k] = o;
+  }
+}
+function renderPrayers() {
+  const now = new Date(), ev = [];
+  [-1, 0, 1].forEach(off => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off), p = P[dk(d)];
+    if (p) KEYS.forEach(n => ev.push({ n, t: p[n] }));
+  });
+  if (!ev.length) return;
+  ev.sort((a, b) => a.t - b.t);
+  const next = ev.find(e => e.t > now), prev = [...ev].reverse().find(e => e.t <= now);
+  if (!next) return;
+  $('nn').textContent = NAMES[next.n]; $('nt').textContent = f12(next.t);
+  $('nr').textContent = 'باقي ' + dur(next.t - now);
+  $('np').textContent = prev ? 'مضى على ' + NAMES[prev.n] + ' ' + dur(now - prev.t) : '';
+  const today = P[dk(now)];
+  if (today) $('prayers').innerHTML = KEYS.map(n =>
+    `<div class="pr${n === next.n ? ' on' : ''}"><b>${NAMES[n]}</b><span>${f12(today[n])}</span></div>`).join('');
+}
+// ----- الوقت والتاريخ -----
+function hijriParts(d) {
+  const p = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day: 'numeric', month: 'numeric' }).formatToParts(d);
+  return { d: +p.find(x => x.type === 'day').value, m: +p.find(x => x.type === 'month').value };
+}
+function daysToRamadan(now) {
+  for (let i = 0; i < 400; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i), h = hijriParts(d);
+    if (h.m === 9 && h.d === 1) return i;
+  }
+  return null;
+}
+function tick() {
+  const n = new Date();
+  $('t').textContent = ar(((n.getHours() % 12) || 12) + ':' + pad(n.getMinutes()));
+  $('ap').textContent = n.getHours() < 12 ? 'ص' : 'م';
+  renderPrayers();
+}
+function renderDates() {
+  const n = new Date();
+  $('gd').textContent = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-arab', { weekday: 'long', day: 'numeric', month: 'long' }).format(n);
+  $('hd').textContent = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab', { day: 'numeric', month: 'long', year: 'numeric' }).format(n);
+  const r = daysToRamadan(n);
+  $('rm').textContent = r === 0 ? 'اليوم أول رمضان' : r ? 'باقي على رمضان ' + ar(r) + ' يومًا' : '';
+}
+// ----- الطقس -----
+const ico = c => c === 0 ? '☀️' : c <= 2 ? '⛅' : c === 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 67 ? '🌧️' : c <= 77 ? '❄️' : c <= 82 ? '🌦️' : '⛈️';
+async function loadWeather() {
+  const rows = [];
+  for (const c of CFG.cities) {
+    const j = await getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=7`, 'wx' + c.n);
+    if (j) rows.push({ c, j });
+  }
+  if (!rows.length) return;
+  const days = rows[0].j.daily.time.map((t, i) => i === 0 ? 'اليوم' : new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { weekday: 'long' }).format(new Date(t + 'T12:00')));
+  let h = '<div></div><div></div>' + days.map(d => `<div class="hd">${d}</div>`).join('');
+  rows.forEach(({ c, j }) => {
+    h += `<div class="city">${c.n}</div><div class="now">${ico(j.current.weather_code)} ${ar(Math.round(j.current.temperature_2m))}°</div>`;
+    h += j.daily.time.map((_, i) => `<div class="d">${ico(j.daily.weather_code[i])}<span>${ar(Math.round(j.daily.temperature_2m_max[i]))}° <i>${ar(Math.round(j.daily.temperature_2m_min[i]))}°</i></span></div>`).join('');
+  });
+  $('wx').innerHTML = h;
+}
+// ----- بيتكوين -----
+async function loadBTC() {
+  const j = await getJSON('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true', 'btc');
+  if (!j || !j.bitcoin) return;
+  const p = j.bitcoin.usd, ch = j.bitcoin.usd_24h_change || 0, up = ch >= 0;
+  const el = $('btc'); el.className = up ? 'up' : 'down';
+  el.textContent = '₿ ' + ar(Math.round(p).toLocaleString('en-US').replace(/,/g, '٬')) + ' دولار ' + (up ? '▲' : '▼') + ' ' + ar(Math.abs(ch).toFixed(1).replace('.', '٫')) + '٪';
+}
+// ----- حماية الشاشة من الاحتراق: إزاحة بسيطة كل دقيقة -----
+function nudge() { $('app').style.transform = `translate(${(Math.random() * 16 - 8).toFixed(0)}px,${(Math.random() * 16 - 8).toFixed(0)}px)`; }
+async function init() {
+  tick(); renderDates(); setInterval(tick, 1000);
+  await loadPrayers(); renderPrayers();
+  loadWeather(); loadBTC();
+  setInterval(loadWeather, 30 * 60e3);
+  setInterval(loadBTC, 2 * 60e3);
+  setInterval(async () => { renderDates(); await loadPrayers(); }, 60 * 60e3);
+  setInterval(nudge, 60e3);
+}
+init();
+</script>
+</body>
+</html>
