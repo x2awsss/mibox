@@ -10,7 +10,8 @@
 *{box-sizing:border-box;margin:0}
 html{font-size:1.04vw;background:#050b22}
 body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-serif;background:radial-gradient(120% 90% at 80% 0%,var(--bg2),var(--bg1) 70%);overflow:hidden}
-#app{padding:4rem 4.5rem;display:flex;flex-direction:column;gap:2rem;min-height:100vh;justify-content:center;transition:transform 2s}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+#app{position:relative;z-index:1;padding:4rem 4.5rem;display:flex;flex-direction:column;gap:2rem;min-height:100vh;justify-content:center;transition:transform 2s}
 .card{background:var(--card);border:1px solid var(--line);border-radius:1.1rem}
 .top{display:grid;grid-template-columns:1fr 30rem;gap:2rem;align-items:center}
 .next{padding:1.4rem 1.6rem;display:flex;flex-direction:column;gap:.6rem}
@@ -40,6 +41,7 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 </style>
 </head>
 <body>
+<canvas id="bg"></canvas>
 <main id="app">
   <section class="top">
     <div class="clock">
@@ -63,6 +65,7 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 <script>
 // ===== الإعدادات: عدّل هنا =====
 const CFG = {
+  bg: 'mix', // stars | snow | grid | mix | none  (أو أضف ?bg=snow آخر الرابط)
   prayer: { city: 'Riyadh', country: 'SA', method: 4 }, // 4 = أم القرى
   cities: [
     { n: 'الرياض', lat: 24.7136, lon: 46.6753 },
@@ -198,6 +201,45 @@ async function init() {
   setInterval(async () => { renderDates(); await loadPrayers(); }, 60 * 60e3);
   setInterval(nudge, 60e3);
 }
+// ----- الخلفية المتحركة -----
+(function () {
+  const mode = new URLSearchParams(location.search).get('bg') || CFG.bg;
+  const cv = $('bg'), cx = cv.getContext('2d');
+  if (mode === 'none' || !cx) return;
+  const stars = mode === 'stars' || mode === 'mix', snow = mode === 'snow', grid = mode === 'grid' || mode === 'mix';
+  let W, H, items = [], off = 0, last = 0;
+  const R = (a, b) => a + Math.random() * (b - a);
+  function size() {
+    W = cv.width = innerWidth; H = cv.height = innerHeight; items = [];
+    const n = snow ? 90 : stars ? 120 : 0;
+    for (let i = 0; i < n; i++) items.push({ x: R(0, W), y: R(0, H), r: snow ? R(1, 3.2) : R(.5, 1.9), v: snow ? R(.4, 1.4) : R(.05, .25), p: R(0, 6.28), s: R(.5, 2) });
+  }
+  function draw(t) {
+    requestAnimationFrame(draw);
+    if (t - last < 33) return; last = t;
+    cx.clearRect(0, 0, W, H);
+    if (grid) {
+      off = (off + .25) % 70;
+      cx.strokeStyle = 'rgba(120,165,255,.07)'; cx.lineWidth = 1; cx.beginPath();
+      for (let x = -70 + off; x < W; x += 70) { cx.moveTo(x, 0); cx.lineTo(x, H); }
+      for (let y = -70 + off; y < H; y += 70) { cx.moveTo(0, y); cx.lineTo(W, y); }
+      cx.stroke();
+    }
+    items.forEach(o => {
+      if (snow) {
+        o.y += o.v; o.x += Math.sin(t / 1500 + o.p) * .4;
+        if (o.y > H + 5) { o.y = -5; o.x = R(0, W); }
+        cx.fillStyle = 'rgba(235,245,255,' + (.35 + o.r / 6) + ')';
+      } else {
+        o.x += o.v; o.y -= o.v * .3;
+        if (o.x > W + 5) o.x = -5; if (o.y < -5) o.y = H + 5;
+        cx.fillStyle = 'rgba(190,220,255,' + (.25 + .75 * Math.abs(Math.sin(t / 1000 * o.s + o.p))).toFixed(2) + ')';
+      }
+      cx.beginPath(); cx.arc(o.x, o.y, o.r, 0, 6.283); cx.fill();
+    });
+  }
+  addEventListener('resize', size); size(); requestAnimationFrame(draw);
+})();
 init();
 </script>
 </body>
