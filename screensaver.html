@@ -51,6 +51,8 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
       <div class="meta">
         <div><span><span class="ic" id="ic-cal"></span> <span id="gd"></span> · <span id="hd"></span></span></div>
         <div><span><span class="ic" id="ic-moon"></span> <span id="rm"></span></span></div>
+        <div><span><span class="ic" id="ic-fitr"></span> <span id="ef"></span></span></div>
+        <div><span><span class="ic" id="ic-adha"></span> <span id="ea"></span></span></div>
         <div class="dhikr" id="dk"></div>
       </div>
     </div>
@@ -137,13 +139,16 @@ function hijriParts(d) {
   const p = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day: 'numeric', month: 'numeric' }).formatToParts(d);
   return { d: +p.find(x => x.type === 'day').value, m: +p.find(x => x.type === 'month').value };
 }
-function daysToRamadan(now) {
+function countdowns(now) {
+  const t = { r: [9, 1], f: [10, 1], a: [12, 10] }, out = {};
   for (let i = 0; i < 400; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i), h = hijriParts(d);
-    if (h.m === 9 && h.d === 1) return i;
+    const h = hijriParts(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i));
+    for (const k in t) if (out[k] === undefined && h.m === t[k][0] && h.d === t[k][1]) out[k] = i;
   }
-  return null;
+  return out;
 }
+const dayW = n => n === 1 ? 'يوم واحد' : n === 2 ? 'يومان' : n <= 10 ? ar(n) + ' أيام' : ar(n) + ' يومًا';
+const cd = (n, name, today) => n === undefined ? '' : n === 0 ? today : 'باقي على ' + name + ' ' + dayW(n);
 function tick() {
   const n = new Date();
   $('t').textContent = ar(((n.getHours() % 12) || 12) + ':' + pad(n.getMinutes()));
@@ -154,8 +159,10 @@ function renderDates() {
   const n = new Date();
   $('gd').textContent = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-arab', { weekday: 'long', day: 'numeric', month: 'long' }).format(n);
   $('hd').textContent = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab', { day: 'numeric', month: 'long', year: 'numeric' }).format(n);
-  const r = daysToRamadan(n);
-  $('rm').textContent = r === 0 ? 'اليوم أول رمضان' : r ? 'باقي على رمضان ' + ar(r) + ' يومًا' : '';
+  const c = countdowns(n);
+  $('rm').textContent = cd(c.r, 'رمضان', 'اليوم أول رمضان');
+  $('ef').textContent = cd(c.f, 'عيد الفطر', 'اليوم عيد الفطر');
+  $('ea').textContent = cd(c.a, 'عيد الأضحى', 'اليوم عيد الأضحى');
 }
 // ----- الطقس -----
 const SV = x => '<svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + x + '</svg>';
@@ -170,9 +177,11 @@ const IC = {
   bolt: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#ffd166', '<path d="M12.5 14.5l-2.5 4h3.5l-2 4"/>')),
   cal: SV(G('#9db4e6', '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>')),
   moon: SV(G('#ffd166', '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')),
+  star: SV(G('#ffd166', '<path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.7 6.4 20.1l1.4-6.3L3 9.5l6.4-.6z"/>')),
+  kaaba: SV(G('#e6f1ff', '<path d="M5 8l7-3 7 3v11l-7 2-7-2z"/><path d="M5 8l7 3 7-3M12 11v10M5 13l7 3 7-3"/>')),
   mosque: SV(G('#7fd3ff', '<path d="M4 21V13h16v8M7 13a5 5 0 0 1 10 0M12 4v3.5M3 21h18M10 21v-3.5a2 2 0 0 1 4 0V21"/>'))
 };
-$('ic-cal').innerHTML = IC.cal; $('ic-moon').innerHTML = IC.moon; $('ic-m').innerHTML = IC.mosque;
+$('ic-cal').innerHTML = IC.cal; $('ic-moon').innerHTML = IC.moon; $('ic-m').innerHTML = IC.mosque; $('ic-fitr').innerHTML = IC.star; $('ic-adha').innerHTML = IC.kaaba;
 const ico = c => c === 0 ? IC.sun : c <= 2 ? IC.part : c === 3 ? IC.cloud : c <= 48 ? IC.fog : c <= 67 ? IC.rain : c <= 77 ? IC.snow : c <= 82 ? IC.rain : IC.bolt;
 async function loadWeather() {
   const rows = [];
