@@ -53,6 +53,7 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
         <div><span><span class="ic" id="ic-moon"></span> <span id="rm"></span></span></div>
         <div><span><span class="ic" id="ic-fitr"></span> <span id="ef"></span></span></div>
         <div><span><span class="ic" id="ic-adha"></span> <span id="ea"></span></span></div>
+        <div><span><span class="ic" id="ic-school"></span> <span id="sc"></span></span></div>
         <div class="dhikr" id="dk"></div>
       </div>
     </div>
@@ -71,9 +72,11 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 const CFG = {
   bg: 'mix', // stars | snow | grid | mix | none  (أو أضف ?bg=snow آخر الرابط)
   prayer: { city: 'Riyadh', country: 'SA', method: 4 }, // 4 = أم القرى
+  schoolEnd: '2027-06-17', // آخر يوم دراسي (سنة-شهر-يوم) - عدّله حسب تقويم وزارة التعليم
   cities: [
     { n: 'الرياض', lat: 24.7136, lon: 46.6753 },
-    { n: 'الطايف', lat: 21.2854, lon: 40.4183 }
+    { n: 'الطايف', lat: 21.2854, lon: 40.4183 },
+    { n: 'مكة', lat: 21.3891, lon: 39.8579 }
   ]
 };
 // ================================
@@ -163,6 +166,9 @@ function renderDates() {
   $('rm').textContent = cd(c.r, 'رمضان', 'اليوم أول رمضان');
   $('ef').textContent = cd(c.f, 'عيد الفطر', 'اليوم عيد الفطر');
   $('ea').textContent = cd(c.a, 'عيد الأضحى', 'اليوم عيد الأضحى');
+  const sd = new Date(CFG.schoolEnd + 'T00:00'), td = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const k = Math.round((sd - td) / 864e5);
+  $('sc').textContent = k < 0 ? '' : k === 0 ? 'اليوم آخر يوم دراسي' : 'باقي على نهاية السنة الدراسية ' + dayW(k);
 }
 // ----- الطقس -----
 const SV = x => '<svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + x + '</svg>';
@@ -179,9 +185,11 @@ const IC = {
   moon: SV(G('#ffd166', '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')),
   star: SV(G('#ffd166', '<path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.7 6.4 20.1l1.4-6.3L3 9.5l6.4-.6z"/>')),
   kaaba: SV(G('#e6f1ff', '<path d="M5 8l7-3 7 3v11l-7 2-7-2z"/><path d="M5 8l7 3 7-3M12 11v10M5 13l7 3 7-3"/>')),
-  mosque: SV(G('#7fd3ff', '<path d="M4 21V13h16v8M7 13a5 5 0 0 1 10 0M12 4v3.5M3 21h18M10 21v-3.5a2 2 0 0 1 4 0V21"/>'))
+  mosque: SV(G('#7fd3ff', '<path d="M4 21V13h16v8M7 13a5 5 0 0 1 10 0M12 4v3.5M3 21h18M10 21v-3.5a2 2 0 0 1 4 0V21"/>')),
+  book: SV(G('#7fd3ff', '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/>'))
 };
 $('ic-cal').innerHTML = IC.cal; $('ic-moon').innerHTML = IC.moon; $('ic-m').innerHTML = IC.mosque; $('ic-fitr').innerHTML = IC.star; $('ic-adha').innerHTML = IC.kaaba;
+$('ic-school').innerHTML = IC.book;
 const ico = c => c === 0 ? IC.sun : c <= 2 ? IC.part : c === 3 ? IC.cloud : c <= 48 ? IC.fog : c <= 67 ? IC.rain : c <= 77 ? IC.snow : c <= 82 ? IC.rain : IC.bolt;
 async function loadWeather() {
   const rows = [];
