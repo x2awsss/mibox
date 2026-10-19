@@ -24,7 +24,7 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 .time small{font-size:2rem;margin-inline-start:.6rem;color:var(--dim)}
 .meta{display:flex;flex-direction:column;gap:.7rem;font-size:1.25rem;color:var(--dim)}
 .meta div{display:flex;gap:1.5rem;align-items:center}
-#btc.up{color:var(--up)}#btc.down{color:var(--down)}
+.dhikr{margin-top:.6rem;font-size:1.6rem;line-height:1.6;color:var(--ink);max-width:60rem;min-height:3.4rem;transition:opacity .9s}.dhikr.out{opacity:0}
 .prayers{display:grid;grid-template-columns:repeat(5,1fr);padding:.8rem;gap:.6rem}
 .pr{text-align:center;padding:1rem .5rem;border-radius:.8rem;border:1px solid transparent}
 .pr.on{background:var(--hi);border-color:rgba(200,220,255,.7)}
@@ -46,7 +46,8 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
       <div class="time"><span id="t">--:--</span><small id="ap"></small></div>
       <div class="meta">
         <div><span>📅 <span id="gd"></span> · <span id="hd"></span></span></div>
-        <div><span>🌙 <span id="rm"></span></span><span id="btc">₿ …</span></div>
+        <div><span>🌙 <span id="rm"></span></span></div>
+        <div class="dhikr" id="dk"></div>
       </div>
     </div>
     <div class="card next">
@@ -168,22 +169,32 @@ async function loadWeather() {
   });
   $('wx').innerHTML = h;
 }
-// ----- بيتكوين -----
-async function loadBTC() {
-  const j = await getJSON('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true', 'btc');
-  if (!j || !j.bitcoin) return;
-  const p = j.bitcoin.usd, ch = j.bitcoin.usd_24h_change || 0, up = ch >= 0;
-  const el = $('btc'); el.className = up ? 'up' : 'down';
-  el.textContent = '₿ ' + ar(Math.round(p).toLocaleString('en-US').replace(/,/g, '٬')) + ' دولار ' + (up ? '▲' : '▼') + ' ' + ar(Math.abs(ch).toFixed(1).replace('.', '٫')) + '٪';
+// ----- أذكار متغيرة -----
+const ADHKAR = [
+  'سبحان الله وبحمده، سبحان الله العظيم',
+  'لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير',
+  'أستغفر الله العظيم وأتوب إليه',
+  'لا حول ولا قوة إلا بالله',
+  'اللهم صلِّ وسلِّم على نبينا محمد',
+  'سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر',
+  'حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم',
+  'يا حي يا قيوم برحمتك أستغيث',
+  'ربِّ اغفر لي وتب عليَّ إنك أنت التواب الرحيم',
+  'سبحان الله وبحمده عدد خلقه ورضا نفسه وزنة عرشه ومداد كلماته',
+  'اللهم إنك عفوٌّ تحب العفو فاعفُ عني'
+];
+let di = Math.floor(Math.random() * ADHKAR.length);
+function dhikr() {
+  const el = $('dk'); el.classList.add('out');
+  setTimeout(() => { el.textContent = ADHKAR[di++ % ADHKAR.length]; el.classList.remove('out'); }, 900);
 }
 // ----- حماية الشاشة من الاحتراق: إزاحة بسيطة كل دقيقة -----
 function nudge() { $('app').style.transform = `translate(${(Math.random() * 16 - 8).toFixed(0)}px,${(Math.random() * 16 - 8).toFixed(0)}px)`; }
 async function init() {
   tick(); renderDates(); setInterval(tick, 1000);
   await loadPrayers(); renderPrayers();
-  loadWeather(); loadBTC();
+  loadWeather(); dhikr(); setInterval(dhikr, 25e3);
   setInterval(loadWeather, 30 * 60e3);
-  setInterval(loadBTC, 2 * 60e3);
   setInterval(async () => { renderDates(); await loadPrayers(); }, 60 * 60e3);
   setInterval(nudge, 60e3);
 }
