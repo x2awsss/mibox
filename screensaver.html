@@ -43,9 +43,11 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 .next{transition:border-color .6s,box-shadow .6s}
 .next.iq{border-color:rgba(215,181,96,.5);box-shadow:0 0 2rem rgba(215,181,96,.07)}
 .next.iq .r{color:#d7b560}
+#veil{position:fixed;inset:0;background:#000;pointer-events:none;z-index:9;transition:opacity 3s}
 </style>
 </head>
 <body>
+<div id="veil"></div>
 <canvas id="bg"></canvas>
 <main id="app">
   <section class="top">
@@ -80,6 +82,9 @@ const CFG = {
   adhan: 'adhan.mp3', // ملف الأذان: ارفعه في الريبو بجانب هالصفحة
   adhanFajr: '',      // اختياري: أذان الفجر (مثل 'adhan-fajr.mp3')، وإن تُرك فاضي يستخدم الأذان العادي
   volume: 0.8,        // مستوى الصوت من 0 إلى 1
+  dim: 0.6,       // سطوع الصفحة نهارًا من 0 إلى 1 (أقل = أخف). جرّب ?dim=0.4 على الرابط
+  dimNight: 0.35, // سطوع الليل
+  nightFrom: 21, nightTo: 5, // ساعات الليل (من - إلى)
   sound: true,        // false = بدون أصوات (أو أضف ?sound=off للرابط)
   schoolEnd: '2027-06-17', // آخر يوم دراسي (سنة-شهر-يوم) - عدّله حسب تقويم وزارة التعليم
   cities: [
@@ -224,11 +229,17 @@ function countdowns(now) {
 }
 const dayW = n => n === 1 ? 'يوم واحد' : n === 2 ? 'يومان' : n <= 10 ? ar(n) + ' أيام' : ar(n) + ' يومًا';
 const cd = (n, name, today) => n === undefined ? '' : n === 0 ? today : 'باقي على ' + name + ' ' + dayW(n);
+function applyDim() { // يعتّم الصفحة كلها: أخف نهارًا وأخف أكثر بالليل
+  const h = NOW().getHours(), a = CFG.nightFrom, b = CFG.nightTo;
+  const night = a > b ? (h >= a || h < b) : (h >= a && h < b), q = parseFloat(Q.get('dim'));
+  const lv = !isNaN(q) ? q : night ? CFG.dimNight : CFG.dim;
+  $('veil').style.opacity = String(1 - Math.max(0, Math.min(1, lv)));
+}
 function tick() {
   const n = NOW();
   $('t').textContent = ar(((n.getHours() % 12) || 12) + ':' + pad(n.getMinutes()));
   $('ap').textContent = n.getHours() < 12 ? 'ص' : 'م';
-  renderPrayers(); alerts();
+  renderPrayers(); alerts(); applyDim();
 }
 function renderDates() {
   const n = NOW();
