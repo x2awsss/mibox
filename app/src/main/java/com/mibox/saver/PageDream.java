@@ -18,6 +18,7 @@ public class PageDream extends DreamService {
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setMediaPlaybackRequiresUserGesture(false); // يسمح بتشغيل الأذان والتنبيه تلقائيًا
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         web.setWebViewClient(new WebViewClient());
         web.loadUrl(Config.URL);

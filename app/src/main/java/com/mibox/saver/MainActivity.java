@@ -16,6 +16,7 @@ public class MainActivity extends Activity {
         WebSettings s = w.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setMediaPlaybackRequiresUserGesture(false); // يسمح بتشغيل الأذان والتنبيه تلقائيًا
         w.setWebViewClient(new WebViewClient());
         w.loadUrl(Config.URL);
         setContentView(w);
