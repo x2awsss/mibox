@@ -6,9 +6,9 @@
 <title>شاشة التوقف</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
 <style>
-:root{--bg1:#050b22;--bg2:#0a1640;--card:rgba(24,48,112,.38);--line:rgba(120,165,255,.38);--ink:#e8efff;--dim:#9db4e6;--accent:#7fd3ff;--hi:rgba(150,190,255,.2);--up:#4ade80;--down:#f472b6}
+:root{--bg1:#0b0c0f;--bg2:#1c1e23;--card:rgba(72,76,86,.32);--line:rgba(190,198,212,.30);--ink:#e9ebef;--dim:#a9afbb;--accent:#c9cdd5;--hi:rgba(200,206,218,.15);--up:#4ade80;--down:#f472b6}
 *{box-sizing:border-box;margin:0}
-html{font-size:1.04vw;background:#050b22}
+html{font-size:1.04vw;background:#0b0c0f}
 body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-serif;background:radial-gradient(120% 90% at 80% 0%,var(--bg2),var(--bg1) 70%);overflow:hidden}
 #bg{position:fixed;inset:0;width:100%;height:100%;z-index:0}
 #app{position:relative;z-index:1;padding:4rem 4.5rem;display:flex;flex-direction:column;gap:2rem;min-height:100vh;justify-content:center;transition:transform 2s}
@@ -21,14 +21,14 @@ body{min-height:100vh;color:var(--ink);font-family:'Tajawal',system-ui,sans-seri
 .next .r{font-size:1.15rem;font-weight:700;color:var(--accent)}
 .next .p{font-size:.8rem;color:var(--dim)}
 .clock{display:flex;flex-direction:column;align-items:flex-start;gap:1rem}
-.time{direction:ltr;font-size:7.5rem;line-height:1;font-weight:500;color:var(--accent);letter-spacing:.02em;text-shadow:0 0 2rem rgba(127,211,255,.25)}
+.time{direction:ltr;font-size:7.5rem;line-height:1;font-weight:500;color:var(--accent);letter-spacing:.02em;text-shadow:0 0 1.6rem rgba(255,255,255,.07)}
 .time small{font-size:2rem;margin-inline-start:.6rem;color:var(--dim)}
 .meta{display:flex;flex-direction:column;gap:.7rem;font-size:1.25rem;color:var(--dim)}
 .meta div{display:flex;gap:1.5rem;align-items:center}
 .dhikr{margin-top:.6rem;font-size:1.6rem;line-height:1.6;color:var(--ink);max-width:60rem;min-height:3.4rem;transition:opacity .9s}.dhikr.out{opacity:0}
 .prayers{display:grid;grid-template-columns:repeat(5,1fr);padding:.8rem;gap:.6rem}
 .pr{text-align:center;padding:1rem .5rem;border-radius:.8rem;border:1px solid transparent}
-.pr.on{background:var(--hi);border-color:rgba(200,220,255,.7)}
+.pr.on{background:var(--hi);border-color:rgba(210,214,222,.5)}
 .pr b{display:block;font-size:1rem;color:var(--dim);font-weight:500;margin-bottom:.5rem}
 .pr span{font-size:1.7rem;font-weight:700}
 .wx{padding:1rem 1.4rem;display:grid;grid-template-columns:7rem 5.5rem repeat(7,1fr);align-items:center;row-gap:.9rem;font-size:1.1rem}
@@ -247,18 +247,18 @@ const SV = x => '<svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="1.
 const G = (c, x) => '<g stroke="' + c + '">' + x + '</g>';
 const IC = {
   sun: SV(G('#ffd166', '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>')),
-  part: SV(G('#ffd166', '<circle cx="8" cy="8" r="2.8"/><path d="M8 2v1.4M2 8h1.4M3.8 3.8l1 1M12.2 3.8l-1 1"/>') + G('#cfe0ff', '<path d="M8 21a3.5 3.5 0 0 1-.4-6.98 4.8 4.8 0 0 1 9.2-.8A4 4 0 0 1 17 21H8z"/>')),
-  cloud: SV(G('#cfe0ff', '<path d="M6.5 18.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 18.5H6.5z"/>')),
-  fog: SV(G('#9db4e6', '<path d="M4 7h16M6 11h14M4 15h16M7 19h11"/>')),
-  rain: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#6cb8ff', '<path d="M8 17.5l-1 3M12 17.5l-1 3M16 17.5l-1 3"/>')),
-  snow: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#e6f1ff', '<path d="M8 18.5v.5M12 20.5v.5M16 18.5v.5M10 22v.5M14 22v.5"/>')),
-  bolt: SV(G('#cfe0ff', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#ffd166', '<path d="M12.5 14.5l-2.5 4h3.5l-2 4"/>')),
-  cal: SV(G('#9db4e6', '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>')),
+  part: SV(G('#ffd166', '<circle cx="8" cy="8" r="2.8"/><path d="M8 2v1.4M2 8h1.4M3.8 3.8l1 1M12.2 3.8l-1 1"/>') + G('#d6d9df', '<path d="M8 21a3.5 3.5 0 0 1-.4-6.98 4.8 4.8 0 0 1 9.2-.8A4 4 0 0 1 17 21H8z"/>')),
+  cloud: SV(G('#d6d9df', '<path d="M6.5 18.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 18.5H6.5z"/>')),
+  fog: SV(G('#aeb4c0', '<path d="M4 7h16M6 11h14M4 15h16M7 19h11"/>')),
+  rain: SV(G('#d6d9df', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#9fb0c4', '<path d="M8 17.5l-1 3M12 17.5l-1 3M16 17.5l-1 3"/>')),
+  snow: SV(G('#d6d9df', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#e8eaee', '<path d="M8 18.5v.5M12 20.5v.5M16 18.5v.5M10 22v.5M14 22v.5"/>')),
+  bolt: SV(G('#d6d9df', '<path d="M6.5 14.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.6-1.3A4.5 4.5 0 0 1 17 14.5H6.5z"/>') + G('#ffd166', '<path d="M12.5 14.5l-2.5 4h3.5l-2 4"/>')),
+  cal: SV(G('#aeb4c0', '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>')),
   moon: SV(G('#ffd166', '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')),
   star: SV(G('#ffd166', '<path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.7 6.4 20.1l1.4-6.3L3 9.5l6.4-.6z"/>')),
-  kaaba: SV(G('#e6f1ff', '<path d="M5 8l7-3 7 3v11l-7 2-7-2z"/><path d="M5 8l7 3 7-3M12 11v10M5 13l7 3 7-3"/>')),
-  mosque: SV(G('#7fd3ff', '<path d="M4 21V13h16v8M7 13a5 5 0 0 1 10 0M12 4v3.5M3 21h18M10 21v-3.5a2 2 0 0 1 4 0V21"/>')),
-  book: SV(G('#7fd3ff', '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/>'))
+  kaaba: SV(G('#e8eaee', '<path d="M5 8l7-3 7 3v11l-7 2-7-2z"/><path d="M5 8l7 3 7-3M12 11v10M5 13l7 3 7-3"/>')),
+  mosque: SV(G('#cfd3da', '<path d="M4 21V13h16v8M7 13a5 5 0 0 1 10 0M12 4v3.5M3 21h18M10 21v-3.5a2 2 0 0 1 4 0V21"/>')),
+  book: SV(G('#cfd3da', '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/>'))
 };
 $('ic-cal').innerHTML = IC.cal; $('ic-moon').innerHTML = IC.moon; $('ic-m').innerHTML = IC.mosque; $('ic-fitr').innerHTML = IC.star; $('ic-adha').innerHTML = IC.kaaba;
 $('ic-school').innerHTML = IC.book;
@@ -328,7 +328,7 @@ async function init() {
     cx.clearRect(0, 0, W, H);
     if (grid) {
       off = (off + .25) % 70;
-      cx.strokeStyle = 'rgba(120,165,255,.07)'; cx.lineWidth = 1; cx.beginPath();
+      cx.strokeStyle = 'rgba(190,198,212,.06)'; cx.lineWidth = 1; cx.beginPath();
       for (let x = -70 + off; x < W; x += 70) { cx.moveTo(x, 0); cx.lineTo(x, H); }
       for (let y = -70 + off; y < H; y += 70) { cx.moveTo(0, y); cx.lineTo(W, y); }
       cx.stroke();
@@ -337,11 +337,11 @@ async function init() {
       if (snow) {
         o.y += o.v; o.x += Math.sin(t / 1500 + o.p) * .4;
         if (o.y > H + 5) { o.y = -5; o.x = R(0, W); }
-        cx.fillStyle = 'rgba(235,245,255,' + (.35 + o.r / 6) + ')';
+        cx.fillStyle = 'rgba(240,242,246,' + (.35 + o.r / 6) + ')';
       } else {
         o.x += o.v; o.y -= o.v * .3;
         if (o.x > W + 5) o.x = -5; if (o.y < -5) o.y = H + 5;
-        cx.fillStyle = 'rgba(190,220,255,' + (.25 + .75 * Math.abs(Math.sin(t / 1000 * o.s + o.p))).toFixed(2) + ')';
+        cx.fillStyle = 'rgba(225,228,236,' + (.25 + .75 * Math.abs(Math.sin(t / 1000 * o.s + o.p))).toFixed(2) + ')';
       }
       cx.beginPath(); cx.arc(o.x, o.y, o.r, 0, 6.283); cx.fill();
     });
